@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidNickname(name) {
+      return name is string && name.size() >= 2 && name.size() <= 12 && !name.matches(".*\\s.*");
+    }
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // - nickname: string
+    // - victories: int
+    // - gamesPlayed: int
+    // - roundsSurvived: int
+    // - updatedAt: timestamp
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidNickname(request.resource.data.nickname);
+      allow update: if isOwner(userId) || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['victories', 'gamesPlayed', 'roundsSurvived']));
+    }
+
+    // Collection: rooms
+    // - code: string
+    // - status: string (lobby, playing, finished)
+    // - createdAt: timestamp
+    // - gameMasterId: string
+    // - round: int
+    // - warningTime: int
+
+    match /rooms/{roomCode} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+
+      match /players/{playerId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isOwner(playerId);
+        allow update: if isAuthenticated();
+        allow delete: if isAuthenticated() && isOwner(playerId);
+      }
+
+      match /game_engine/status {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
+      }
+    }
+  }
+}

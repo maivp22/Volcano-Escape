@@ -1,0 +1,18 @@
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVVL2C9UHj4NCFznVUuCyHLI8hzzYebSw",
+  authDomain: "batch-8-cooweb-ai.firebaseapp.com",
+  projectId: "batch-8-cooweb-ai",
+  storageBucket: "batch-8-cooweb-ai.firebasestorage.app",
+  messagingSenderId: "252363459473",
+  appId: "1:252363459473:web:b15378dd2eb7d4ae786830"
+};
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const storage = getStorage(app);

@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Room",
+      "description": "A game room session",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "status": { "type": "string", "enum": ["lobby", "playing", "finished"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "gameMasterId": { "type": "string" },
+        "round": { "type": "integer" },
+        "warningTime": { "type": "integer" }
+      },
+      "required": ["code", "status", "createdAt", "gameMasterId"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "A player in a room",
+      "type": "object",
+      "properties": {
+        "nickname": { "type": "string" },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "integer" },
+            "y": { "type": "integer" }
+          }
+        },
+        "status": { "type": "string", "enum": ["active", "eliminated", "spectator"] },
+        "isGameMaster": { "type": "boolean" },
+        "joinedAt": { "type": "string", "format": "date-time" },
+        "color": { "type": "string" }
+      },
+      "required": ["nickname", "status", "joinedAt"]
+    },
+    "GameEngineStatus": {
+      "title": "Game Engine Status",
+      "description": "The current state of the game engine for a room",
+      "type": "object",
+      "properties": {
+        "danger_zones": { "type": "array", "items": { "type": "string" } },
+        "lava_zones": { "type": "array", "items": { "type": "string" } },
+        "phase": { "type": "string", "enum": ["warning", "lava", "cooldown"] },
+        "round": { "type": "integer" }
+      }
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Persistent user data",
+      "type": "object",
+      "properties": {
+        "nickname": { "type": "string" },
+        "victories": { "type": "integer" },
+        "gamesPlayed": { "type": "integer" },
+        "roundsSurvived": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nickname", "victories", "gamesPlayed", "roundsSurvived"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "Persistent user profile"
+    },
+    "/rooms/{roomCode}": {
+      "schema": "Room",
+      "description": "Main room document"
+    },
+    "/rooms/{roomCode}/players/{playerId}": {
+      "schema": "Player",
+      "description": "Players in the room"
+    },
+    "/rooms/{roomCode}/game_engine/status": {
+      "schema": "GameEngineStatus",
+      "description": "Game engine status document"
+    }
+  }
+}
