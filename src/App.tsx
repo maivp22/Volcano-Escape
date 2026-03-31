@@ -765,8 +765,7 @@ export default function App() {
         isGameMaster: true,
         joinedAt: serverTimestamp(),
         avatar: AVATARS[0],
-        color: NEON_COLORS[0],
-        coins: 0
+        color: NEON_COLORS[0]
       });
 
       await setDoc(doc(db, `rooms/${code}/game_engine/status`), {
@@ -821,8 +820,7 @@ export default function App() {
         isGameMaster: false,
         joinedAt: serverTimestamp(),
         avatar: AVATARS[playersSnap.size],
-        color: NEON_COLORS[playersSnap.size],
-        coins: 0
+        color: NEON_COLORS[playersSnap.size]
       });
 
       // Update games played
@@ -878,13 +876,9 @@ export default function App() {
     
     const batch = writeBatch(db);
     players.forEach(p => {
-      const occupiedCells = players
-        .filter(player => player.id !== p.id)
-        .map(player => getCellId(player.position.x, player.position.y));
-      
       batch.update(doc(db, `rooms/${roomCode}/players/${p.id}`), {
         status: 'active',
-        position: getSafePosition([], [], occupiedCells, GRID_SIZE)
+        position: getRandomPosition(GRID_SIZE)
       });
     });
     batch.update(doc(db, `rooms/${roomCode}`), {
