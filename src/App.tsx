@@ -1700,6 +1700,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#1a0f0a] selection:bg-[#ff4500] selection:text-white overflow-x-hidden">
       {!roomCode ? renderStart() : room?.status === 'lobby' ? renderLobby() : renderGame()}
+      <footer className="text-center text-xs py-2" style={{color: '#ff6b00'}}>
+      🌋 Volcano Escape — v1.1.0
+      </footer>
     </div>
   );
 }
