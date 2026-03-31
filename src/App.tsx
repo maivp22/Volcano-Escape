@@ -27,7 +27,8 @@ import {
   getCellId, 
   isAdjacent, 
   getDangerZones, 
-  getDifficulty 
+  getDifficulty,
+  getSafePosition
 } from './utils/gameUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -82,6 +83,7 @@ interface Player {
   color: string;
   roundsSurvived?: number;
   eliminatedAt?: any;
+  coins?: number;
 }
 
 interface GameEngineStatus {
@@ -763,7 +765,8 @@ export default function App() {
         isGameMaster: true,
         joinedAt: serverTimestamp(),
         avatar: AVATARS[0],
-        color: NEON_COLORS[0]
+        color: NEON_COLORS[0],
+        coins: 0
       });
 
       await setDoc(doc(db, `rooms/${code}/game_engine/status`), {
@@ -818,7 +821,8 @@ export default function App() {
         isGameMaster: false,
         joinedAt: serverTimestamp(),
         avatar: AVATARS[playersSnap.size],
-        color: NEON_COLORS[playersSnap.size]
+        color: NEON_COLORS[playersSnap.size],
+        coins: 0
       });
 
       // Update games played
@@ -873,10 +877,11 @@ export default function App() {
     if (!roomCode || room?.gameMasterId !== playerId) return;
     
     const batch = writeBatch(db);
+    const emptyEngine = { danger_zones: [], lava_zones: [], phase: 'cooldown' as GamePhase };
     players.forEach(p => {
       batch.update(doc(db, `rooms/${roomCode}/players/${p.id}`), {
         status: 'active',
-        position: getRandomPosition(GRID_SIZE)
+        position: getSafePosition(emptyEngine, players, GRID_SIZE)
       });
     });
     batch.update(doc(db, `rooms/${roomCode}`), {
@@ -1327,7 +1332,7 @@ export default function App() {
   );
 
   const handleRevive = async () => {
-    if (!playerId || !roomCode || !profile) return;
+    if (!playerId || !roomCode || !profile || !engine) return;
     if (profile.coins < 5) return;
     try {
       await updateDoc(doc(db, 'users', playerId), {
@@ -1336,7 +1341,7 @@ export default function App() {
       });
       await updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
         status: 'active',
-        position: getRandomPosition(GRID_SIZE),
+        position: getSafePosition(engine, players, GRID_SIZE),
         eliminatedAt: null
       });
       setShowReviveModal(false);

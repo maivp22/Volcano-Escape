@@ -72,3 +72,36 @@ export const getDifficulty = (activePlayersCount: number, round: number) => {
     isSpecial: false
   };
 };
+
+export const getSafePosition = (
+  dangerZones: string[], 
+  lavaZones: string[], 
+  occupiedCells: string[], 
+  gridSize: number
+): { x: number, y: number } => {
+  const allCells = [];
+  for (let x = 0; x < gridSize; x++) {
+    for (let y = 0; y < gridSize; y++) {
+      allCells.push(getCellId(x, y));
+    }
+  }
+  
+  // Filter out danger, lava, and occupied cells
+  const safeCells = allCells.filter(id => !dangerZones.includes(id) && !lavaZones.includes(id) && !occupiedCells.includes(id));
+  
+  if (safeCells.length === 0) {
+     // Fallback if the board is completely full (very unlikely)
+     const fallback = allCells.filter(id => !lavaZones.includes(id));
+     if (fallback.length > 0) {
+       const chosen = fallback[Math.floor(Math.random() * fallback.length)];
+       const [x, y] = chosen.split('-').map(Number);
+       return { x, y };
+     }
+     return { x: Math.floor(gridSize / 2), y: Math.floor(gridSize / 2) };
+  }
+
+  const chosenId = safeCells[Math.floor(Math.random() * safeCells.length)];
+  const [x, y] = chosenId.split('-').map(Number);
+  return { x, y };
+};
+
