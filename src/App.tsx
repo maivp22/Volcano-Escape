@@ -1612,11 +1612,17 @@ export default function App() {
             )}
 
             {isEliminated && room?.status === 'playing' && !showPreview && (
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-red-500 z-10 rounded-3xl">
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-red-500 z-40 rounded-3xl p-8">
                 <Skull className="w-24 h-24 mb-4 animate-bounce" />
                 <h2 className="text-5xl font-black tracking-tighter italic uppercase">{t.burned}</h2>
                 <p className="text-sm font-bold uppercase tracking-widest opacity-70">{t.fellIntoLava}</p>
                 <p className="mt-8 text-[10px] font-black animate-pulse uppercase tracking-[0.5em]">{t.spectating}</p>
+                <button 
+                  onClick={() => setRoomCode(null)}
+                  className="mt-8 bg-red-600 hover:bg-red-700 text-white font-black py-3 px-6 rounded-xl uppercase tracking-widest transition-all"
+                >
+                  {t.returnToMenu || 'Volver al menú'}
+                </button>
               </div>
             )}
 
@@ -1779,7 +1785,7 @@ export default function App() {
     <div className="min-h-screen bg-[#1a0f0a] selection:bg-[#ff4500] selection:text-white overflow-x-hidden">
       {!roomCode ? renderStart() : room?.status === 'lobby' ? renderLobby() : renderGame()}
       <footer className="text-center text-xs py-2" style={{color: '#ff6b00'}}>
-      🌋 Volcano Escape — v1.2.0
+      🌋 Volcano Escape — v1.3.0
       </footer>
     </div>
   );
