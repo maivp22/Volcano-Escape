@@ -613,24 +613,37 @@ export default function App() {
     }
   }, [players, room?.status, playerId]);
 
+  const [eliminationActivated, setEliminationActivated] = useState(false);
+
   useEffect(() => {
     const currentPlayer = players.find(p => p.id === playerId);
-    if (currentPlayer?.status === 'eliminated' && room?.status === 'playing') {
-      if (survivedSecondsAtElimination == null) {
-        setSurvivedSecondsAtElimination(elapsedSeconds);
-      }
+    const isEliminated = currentPlayer?.status === 'eliminated';
+
+    if (isEliminated && room?.status === 'playing') {
       setShowEliminationModal(true);
+    } else {
+      setShowEliminationModal(false);
+    }
+  }, [players, room?.status, playerId]);
+
+  useEffect(() => {
+    const currentPlayer = players.find(p => p.id === playerId);
+    const isEliminated = currentPlayer?.status === 'eliminated';
+
+    if (isEliminated && room?.status === 'playing' && !eliminationActivated) {
+      setEliminationActivated(true);
+      setSurvivedSecondsAtElimination(elapsedSeconds);
       setCanExitAfterDelay(false);
       const timer = setTimeout(() => setCanExitAfterDelay(true), 4000);
       return () => clearTimeout(timer);
     }
 
-    if (room?.status !== 'playing') {
-      setShowEliminationModal(false);
+    if (!isEliminated || room?.status !== 'playing') {
+      setEliminationActivated(false);
       setCanExitAfterDelay(false);
       setSurvivedSecondsAtElimination(null);
     }
-  }, [players, room?.status, playerId, elapsedSeconds, survivedSecondsAtElimination]);
+  }, [players, room?.status, playerId, eliminationActivated, elapsedSeconds]);
 
   useEffect(() => {
     if (engine?.phase === 'warning') {
@@ -1864,7 +1877,7 @@ export default function App() {
     <div className="min-h-screen bg-[#1a0f0a] selection:bg-[#ff4500] selection:text-white overflow-x-hidden">
       {!roomCode ? renderStart() : room?.status === 'lobby' ? renderLobby() : renderGame()}
       <footer className="text-center text-xs py-2" style={{color: '#ff6b00'}}>
-      🌋 Volcano Escape — v1.4.0
+      🌋 Volcano Escape — v1.4.3
       </footer>
     </div>
   );
