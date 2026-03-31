@@ -708,40 +708,62 @@ export default function App() {
     }
   }, [room?.status, room?.countdownStart, room?.gameMasterId, playerId, roomCode]);
 
-  // --- Timer (synchronized with room.createdAt) ---
+  // --- Timer (synchronized with room.createdAt / room.countdownStart) ---
   useEffect(() => {
-    if (!room?.createdAt) {
+    if (!room) {
       setGameStartTimeMs(null);
       setElapsedSeconds(0);
       setFinalDurationSeconds(null);
       return;
     }
 
-    const startMs = room.createdAt?.toMillis ? room.createdAt.toMillis() : room.createdAt;
-    setGameStartTimeMs(startMs);
-  }, [room?.createdAt]);
-
-  useEffect(() => {
-    if (!gameStartTimeMs) return;
-
-    if (room?.status === 'playing') {
+    if (room.status === 'playing') {
+      // Start counting from the actual game start moment.
+      if (room.countdownStart) {
+        const countdownMs = room.countdownStart.toMillis ? room.countdownStart.toMillis() : room.countdownStart;
+        setGameStartTimeMs(countdownMs + 3000); // Start at Go
+      } else if (room.createdAt) {
+        const createdMs = room.createdAt.toMillis ? room.createdAt.toMillis() : room.createdAt;
+        setGameStartTimeMs(createdMs);
+      } else {
+        setGameStartTimeMs(Date.now());
+      }
       setFinalDurationSeconds(null);
-      const interval = setInterval(() => {
-        const elapsed = Math.max(0, Math.floor((Date.now() - gameStartTimeMs) / 1000));
-        setElapsedSeconds(elapsed);
-      }, 1000);
-      return () => clearInterval(interval);
+      return;
     }
 
-    if (room?.status === 'finished') {
-      const elapsed = Math.max(0, Math.floor((Date.now() - gameStartTimeMs) / 1000));
+    if (room.status === 'finished') {
+      if (gameStartTimeMs == null) {
+        if (room.countdownStart) {
+          const countdownMs = room.countdownStart.toMillis ? room.countdownStart.toMillis() : room.countdownStart;
+          setGameStartTimeMs(countdownMs + 3000);
+        } else if (room.createdAt) {
+          const createdMs = room.createdAt.toMillis ? room.createdAt.toMillis() : room.createdAt;
+          setGameStartTimeMs(createdMs);
+        }
+      }
+      const start = room.countdownStart ? (room.countdownStart.toMillis ? room.countdownStart.toMillis() : room.countdownStart) + 3000 : (room.createdAt ? (room.createdAt.toMillis ? room.createdAt.toMillis() : room.createdAt) : Date.now());
+      const elapsed = Math.max(0, Math.floor((Date.now() - start) / 1000));
       setElapsedSeconds(elapsed);
       setFinalDurationSeconds(elapsed);
       return;
     }
 
-    // pause / lobby / countdown
+    // lobby / countdown / any non-playing stage
+    setGameStartTimeMs(null);
     setElapsedSeconds(0);
+    setFinalDurationSeconds(null);
+  }, [room, gameStartTimeMs]);
+
+  useEffect(() => {
+    if (room?.status !== 'playing' || !gameStartTimeMs) return;
+
+    const interval = setInterval(() => {
+      const elapsed = Math.max(0, Math.floor((Date.now() - gameStartTimeMs) / 1000));
+      setElapsedSeconds(elapsed);
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [room?.status, gameStartTimeMs]);
 
   // --- Firestore Listeners ---
@@ -1757,7 +1779,7 @@ export default function App() {
     <div className="min-h-screen bg-[#1a0f0a] selection:bg-[#ff4500] selection:text-white overflow-x-hidden">
       {!roomCode ? renderStart() : room?.status === 'lobby' ? renderLobby() : renderGame()}
       <footer className="text-center text-xs py-2" style={{color: '#ff6b00'}}>
-      🌋 Volcano Escape — v1.1.0
+      🌋 Volcano Escape — v1.2.0
       </footer>
     </div>
   );
