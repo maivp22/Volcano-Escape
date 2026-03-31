@@ -328,6 +328,7 @@ export default function App() {
   const [bannerText, setBannerText] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [showReviveModal, setShowReviveModal] = useState(false);
 
   // --- Settings State ---
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('language') as Language) || 'es');
@@ -630,8 +631,13 @@ export default function App() {
         if (rounds > 0) {
           updateDoc(doc(db, 'users', playerId), {
             roundsSurvived: increment(rounds),
+            coins: increment(rounds),
             updatedAt: serverTimestamp()
           });
+        }
+        
+        if (profile && typeof profile.coins === 'number' && profile.coins >= 5) {
+          setShowReviveModal(true);
         }
       }
     }
@@ -644,6 +650,7 @@ export default function App() {
       if (winner && winner.id === playerId) {
         updateDoc(doc(db, 'users', playerId), {
           victories: increment(1),
+          coins: increment(10),
           updatedAt: serverTimestamp()
         });
       }
@@ -1319,6 +1326,25 @@ export default function App() {
     </div>
   );
 
+  const handleRevive = async () => {
+    if (!playerId || !roomCode || !profile) return;
+    if (profile.coins < 5) return;
+    try {
+      await updateDoc(doc(db, 'users', playerId), {
+        coins: increment(-5),
+        updatedAt: serverTimestamp()
+      });
+      await updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
+        status: 'active',
+        position: getRandomPosition(GRID_SIZE),
+        eliminatedAt: null
+      });
+      setShowReviveModal(false);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const renderGame = () => {
     const currentPlayer = players.find(p => p.id === playerId);
     const isEliminated = currentPlayer?.status !== 'active';
@@ -1534,11 +1560,34 @@ export default function App() {
             )}
 
             {isEliminated && room?.status === 'playing' && !showPreview && (
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-red-500 z-10 rounded-3xl">
-                <Skull className="w-24 h-24 mb-4 animate-bounce" />
-                <h2 className="text-5xl font-black tracking-tighter italic uppercase">{t.burned}</h2>
-                <p className="text-sm font-bold uppercase tracking-widest opacity-70">{t.fellIntoLava}</p>
-                <p className="mt-8 text-[10px] font-black animate-pulse uppercase tracking-[0.5em]">{t.spectating}</p>
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-red-500 z-10 rounded-3xl p-6 text-center">
+                {showReviveModal ? (
+                  <>
+                    <h2 className="text-4xl md:text-5xl font-black italic uppercase text-white mb-2 tracking-tighter shadow-black drop-shadow-lg">{t.reviveTitle}</h2>
+                    <p className="text-[#ff8c00] font-bold mb-8 text-xl uppercase tracking-widest">{t.reviveCost} 5 {t.coins} (Tienes {profile?.coins})</p>
+                    <div className="flex flex-col md:flex-row gap-4 w-full max-w-sm">
+                      <button 
+                        onClick={handleRevive}
+                        className="flex-1 bg-[#00ff41] text-black font-black px-6 py-4 rounded-xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,255,65,0.4)] uppercase text-lg"
+                      >
+                        {t.reviveYes}
+                      </button>
+                      <button 
+                        onClick={() => setShowReviveModal(false)}
+                        className="flex-1 bg-black border-2 border-[#ff4500] text-[#ff4500] font-black px-6 py-4 rounded-xl hover:bg-[#ff4500] hover:text-white transition-all uppercase text-lg"
+                      >
+                        {t.reviveNo}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Skull className="w-24 h-24 mb-4 animate-bounce" />
+                    <h2 className="text-5xl font-black tracking-tighter italic uppercase">{t.burned}</h2>
+                    <p className="text-sm font-bold uppercase tracking-widest opacity-70">{t.fellIntoLava}</p>
+                    <p className="mt-8 text-[10px] font-black animate-pulse uppercase tracking-[0.5em]">{t.spectating}</p>
+                  </>
+                )}
               </div>
             )}
 
@@ -1669,6 +1718,12 @@ export default function App() {
                 <span className="opacity-50 uppercase">{t.yourStatus}:</span>
                 <span className={isEliminated ? 'text-red-500' : 'text-[#ff4500]'}>
                   {isEliminated ? t.eliminated : t.active}
+                </span>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold">
+                <span className="opacity-50 uppercase">{t.coins}:</span>
+                <span className="text-yellow-400 flex items-center gap-1">
+                  <span className="text-[12px]">🪙</span> {profile?.coins || 0}
                 </span>
               </div>
               <div className="flex justify-between text-[10px] font-bold">

@@ -97,6 +97,12 @@ export const translations = {
     waitingForLeader: "Esperando al Líder para partir...",
     fellIntoLava: "Caíste en la lava",
     returnToMenu: "Volver al Menú Principal",
+    coins: "MONEDAS",
+    reviveTitle: "¿Quieres revivir?",
+    reviveCost: "Revivir cuesta",
+    notEnoughCoins: "No tienes suficientes monedas",
+    reviveYes: "Revivir",
+    reviveNo: "Eliminación",
   },
   en: {
     title: "VOLCANO_ESCAPE",
@@ -194,5 +200,11 @@ export const translations = {
     waitingForLeader: "Waiting for Leader to depart...",
     fellIntoLava: "You fell into the lava",
     returnToMenu: "Return to Main Menu",
+    coins: "COINS",
+    reviveTitle: "Do you want to revive?",
+    reviveCost: "Revive costs",
+    notEnoughCoins: "Not enough coins",
+    reviveYes: "Revive",
+    reviveNo: "Eliminate",
   }
 };

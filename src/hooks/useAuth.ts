@@ -9,6 +9,7 @@ export interface UserProfile {
   victories: number;
   gamesPlayed: number;
   roundsSurvived: number;
+  coins: number;
 }
 
 export function useAuth() {
@@ -57,6 +58,7 @@ export function useAuth() {
       victories: 0,
       gamesPlayed: 0,
       roundsSurvived: 0,
+      coins: 0,
       updatedAt: serverTimestamp()
     });
   };
