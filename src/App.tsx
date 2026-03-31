@@ -633,9 +633,8 @@ export default function App() {
     if (isEliminated && room?.status === 'playing' && !eliminationActivated) {
       setEliminationActivated(true);
       setSurvivedSecondsAtElimination(elapsedSeconds);
-      setCanExitAfterDelay(false);
-      const timer = setTimeout(() => setCanExitAfterDelay(true), 4000);
-      return () => clearTimeout(timer);
+      setCanExitAfterDelay(true); // immediate true
+      return;
     }
 
     if (!isEliminated || room?.status !== 'playing') {
@@ -1877,7 +1876,7 @@ export default function App() {
     <div className="min-h-screen bg-[#1a0f0a] selection:bg-[#ff4500] selection:text-white overflow-x-hidden">
       {!roomCode ? renderStart() : room?.status === 'lobby' ? renderLobby() : renderGame()}
       <footer className="text-center text-xs py-2" style={{color: '#ff6b00'}}>
-      🌋 Volcano Escape — v1.4.3
+      🌋 Volcano Escape — v1.4.5
       </footer>
     </div>
   );
