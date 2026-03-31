@@ -877,11 +877,14 @@ export default function App() {
     if (!roomCode || room?.gameMasterId !== playerId) return;
     
     const batch = writeBatch(db);
-    const emptyEngine = { danger_zones: [], lava_zones: [], phase: 'cooldown' as GamePhase };
     players.forEach(p => {
+      const occupiedCells = players
+        .filter(player => player.id !== p.id)
+        .map(player => getCellId(player.position.x, player.position.y));
+      
       batch.update(doc(db, `rooms/${roomCode}/players/${p.id}`), {
         status: 'active',
-        position: getSafePosition(emptyEngine, players, GRID_SIZE)
+        position: getSafePosition([], [], occupiedCells, GRID_SIZE)
       });
     });
     batch.update(doc(db, `rooms/${roomCode}`), {
@@ -1335,13 +1338,17 @@ export default function App() {
     if (!playerId || !roomCode || !profile || !engine) return;
     if (profile.coins < 5) return;
     try {
+      const occupiedCells = players
+        .filter(p => p.status === 'active' && p.id !== playerId)
+        .map(p => getCellId(p.position.x, p.position.y));
+      
       await updateDoc(doc(db, 'users', playerId), {
         coins: increment(-5),
         updatedAt: serverTimestamp()
       });
       await updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
         status: 'active',
-        position: getSafePosition(engine, players, GRID_SIZE),
+        position: getSafePosition(engine.danger_zones, engine.lava_zones, occupiedCells, GRID_SIZE),
         eliminatedAt: null
       });
       setShowReviveModal(false);
