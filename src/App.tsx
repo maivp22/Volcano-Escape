@@ -1481,13 +1481,13 @@ export default function App() {
 
         {/* Center: Game Board */}
         <div className="flex-1 flex flex-col items-center justify-center gap-4 relative">
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/70 border border-[#ff6b00] rounded-xl px-3 py-1 shadow-[0_0_20px_rgba(255,107,0,0.4)]">
-            <span className="text-[#ff6b00] font-mono font-black text-lg tracking-widest">
-              {room?.status === 'finished'
-                ? `Duración: ${formatMMSS(finalDurationSeconds ?? elapsedSeconds)}`
-                : formatMMSS(elapsedSeconds)}
-            </span>
-          </div>
+            {room?.status === 'playing' && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/70 border border-[#ff6b00] rounded-xl px-3 py-1 shadow-[0_0_20px_rgba(255,107,0,0.4)]">
+              <span className="text-[#ff6b00] font-mono font-black text-lg tracking-widest">
+                {formatMMSS(elapsedSeconds)}
+              </span>
+            </div>
+          )}
 
           <AnimatePresence>
             {countdown !== null && (
