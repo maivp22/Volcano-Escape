@@ -613,36 +613,17 @@ export default function App() {
     }
   }, [players, room?.status, playerId]);
 
-  const [eliminationActivated, setEliminationActivated] = useState(false);
 
   useEffect(() => {
     const currentPlayer = players.find(p => p.id === playerId);
     const isEliminated = currentPlayer?.status === 'eliminated';
 
     if (isEliminated && room?.status === 'playing') {
-      setShowEliminationModal(true);
+      setShowReviveModal(true);
     } else {
-      setShowEliminationModal(false);
+      setShowReviveModal(false);
     }
   }, [players, room?.status, playerId]);
-
-  useEffect(() => {
-    const currentPlayer = players.find(p => p.id === playerId);
-    const isEliminated = currentPlayer?.status === 'eliminated';
-
-    if (isEliminated && room?.status === 'playing' && !eliminationActivated) {
-      setEliminationActivated(true);
-      setSurvivedSecondsAtElimination(elapsedSeconds);
-      setCanExitAfterDelay(true); // immediate true
-      return;
-    }
-
-    if (!isEliminated || room?.status !== 'playing') {
-      setEliminationActivated(false);
-      setCanExitAfterDelay(false);
-      setSurvivedSecondsAtElimination(null);
-    }
-  }, [players, room?.status, playerId, eliminationActivated, elapsedSeconds]);
 
   useEffect(() => {
     if (engine?.phase === 'warning') {
