@@ -50,7 +50,8 @@ export function AuthScreen() {
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Volcano Escape</h1>
           <p className="text-[#a08070] text-sm mt-2">
-            {isRegistering ? 'Create your account' : 'Welcome back, survivor'}
+            {isRegistering && <span>Create your account</span>}
+            {!isRegistering && <span>Welcome back, survivor</span>}
           </p>
         </div>
 
@@ -117,8 +118,10 @@ export function AuthScreen() {
               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                {isRegistering ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                {isRegistering ? 'Register' : 'Sign In'}
+                {isRegistering && <UserPlus className="w-5 h-5" />}
+                {!isRegistering && <LogIn className="w-5 h-5" />}
+                {isRegistering && <span>Register</span>}
+                {!isRegistering && <span>Sign In</span>}
               </>
             )}
           </button>
@@ -132,7 +135,8 @@ export function AuthScreen() {
             }}
             className="text-[#a08070] hover:text-white text-sm font-medium transition-colors"
           >
-            {isRegistering ? 'Already have an account? Sign In' : "Don't have an account? Register"}
+            {isRegistering && <span>Already have an account? Sign In</span>}
+            {!isRegistering && <span>Don't have an account? Register</span>}
           </button>
         </div>
       </motion.div>
