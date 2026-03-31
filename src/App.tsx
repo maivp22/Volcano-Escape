@@ -1407,9 +1407,9 @@ export default function App() {
                     >
                       <div className="text-center">
                         <div className="text-2xl mb-1">{avatar.emoji}</div>
-                        <div className="text-[8px] font-black text-white uppercase tracking-widest">{avatar.name}</div>
+                        <div className="text-[10px] font-black text-white uppercase tracking-widest h-5 line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap">{avatar.name}</div>
                         {isTaken && takenBy && (
-                          <div className="text-[6px] text-gray-300 mt-1 truncate">{takenBy.nickname}</div>
+                          <div className="text-[7px] text-gray-300 mt-1 truncate max-w-full">{takenBy.nickname}</div>
                         )}
                       </div>
                     </div>
