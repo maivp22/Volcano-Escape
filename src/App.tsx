@@ -871,6 +871,22 @@ export default function App() {
     }
   };
 
+  const handleMove = async (x: number, y: number) => {
+    if (!room || room.status !== 'playing' || !playerId || !roomCode || showPreview) return;
+    const currentPlayer = players.find(p => p.id === playerId);
+    if (!currentPlayer || currentPlayer.status !== 'active') return;
+
+    if (!isAdjacent(currentPlayer.position, { x, y })) return;
+    if (engine?.lava_zones.includes(getCellId(x, y))) return;
+
+    const isOccupied = players.some(p => p.status === 'active' && p.position.x === x && p.position.y === y);
+    if (isOccupied) return;
+
+    await updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
+      position: { x, y }
+    });
+  };
+
   const handleJoinRoom = async () => {
     if (!profile || !playerId || !inputCode.trim()) {
       setError('Expedition Code required');
