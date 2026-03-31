@@ -1543,12 +1543,12 @@ export default function App() {
             )}
 
             {room?.status === 'finished' && (
-              <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-[#ff4500] z-20 rounded-3xl p-6 overflow-hidden">
-                <Trophy className="w-16 h-16 mb-2 text-yellow-500 animate-pulse drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
-                <h2 className="text-4xl font-black tracking-tighter italic text-white uppercase mb-6">{t.expeditionEnd}</h2>
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-start text-[#ff4500] z-20 rounded-3xl p-6 overflow-y-auto scrollbar-thin">
+                <Trophy className="w-12 h-12 mb-2 text-yellow-500 animate-pulse drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0" />
+                <h2 className="text-2xl md:text-3xl font-black tracking-tighter italic text-white uppercase mb-2 mt-2 shrink-0">{t.expeditionEnd}</h2>
                 
                 {/* Podium View */}
-                <div className="flex items-end justify-center gap-4 h-48 mb-8 w-full max-w-lg">
+                <div className="flex items-end justify-center gap-2 md:gap-4 mb-4 w-full max-w-lg shrink-0">
                   {/* 2nd Place */}
                   {sortedPlayers[1] && (
                     <motion.div 
@@ -1557,12 +1557,12 @@ export default function App() {
                       transition={{ delay: 0.6, type: "spring", bounce: 0.5 }}
                       className="flex flex-col items-center w-1/3"
                     >
-                      <div className="text-4xl mb-2">🥈</div>
-                      <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]" style={{ backgroundColor: sortedPlayers[1].color }}>
+                      <div className="text-2xl mb-1">🥈</div>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl mb-1 shadow-[0_0_15px_rgba(255,255,255,0.2)] border-2 border-gray-300" style={{ backgroundColor: sortedPlayers[1].color }}>
                         {sortedPlayers[1].avatar.emoji}
                       </div>
-                      <p className="text-white font-bold text-sm truncate w-full text-center">{sortedPlayers[1].nickname}</p>
-                      <div className="w-full h-24 bg-gradient-to-t from-gray-400/80 to-gray-300/50 mt-2 rounded-t-xl border-t-4 border-gray-300 flex items-end justify-center pb-2 text-white font-black text-2xl drop-shadow-md">
+                      <p className="text-white font-bold text-[10px] md:text-xs truncate w-full text-center px-1">{sortedPlayers[1].nickname}</p>
+                      <div className="w-full h-16 bg-gradient-to-t from-gray-400/80 to-gray-300/50 mt-1 rounded-t-xl border-t-4 border-gray-300 flex items-center justify-center text-white font-black text-2xl drop-shadow-md">
                         2
                       </div>
                     </motion.div>
@@ -1576,12 +1576,12 @@ export default function App() {
                       transition={{ delay: 1.0, type: "spring", bounce: 0.5 }}
                       className="flex flex-col items-center w-1/3 z-10"
                     >
-                      <div className="text-5xl mb-2 animate-bounce">🥇</div>
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-2 shadow-[0_0_30px_rgba(255,215,0,0.5)]" style={{ backgroundColor: sortedPlayers[0].color }}>
+                      <div className="text-3xl mb-1 animate-bounce">🥇</div>
+                      <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-1 shadow-[0_0_25px_rgba(255,215,0,0.5)] border-2 border-yellow-400" style={{ backgroundColor: sortedPlayers[0].color }}>
                         {sortedPlayers[0].avatar.emoji}
                       </div>
-                      <p className="text-white font-black text-lg truncate w-full text-center">{sortedPlayers[0].nickname}</p>
-                      <div className="w-full h-32 bg-gradient-to-t from-yellow-600/80 to-yellow-400/50 mt-2 rounded-t-xl border-t-4 border-yellow-400 flex items-end justify-center pb-4 text-white font-black text-4xl drop-shadow-md">
+                      <p className="text-white font-black text-xs md:text-sm truncate w-full text-center px-1">{sortedPlayers[0].nickname}</p>
+                      <div className="w-full h-24 bg-gradient-to-t from-yellow-600/80 to-yellow-400/50 mt-1 rounded-t-xl border-t-4 border-yellow-400 flex items-center justify-center text-white font-black text-3xl drop-shadow-md">
                         1
                       </div>
                     </motion.div>
@@ -1595,12 +1595,12 @@ export default function App() {
                       transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
                       className="flex flex-col items-center w-1/3"
                     >
-                      <div className="text-4xl mb-2">🥉</div>
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-2 shadow-[0_0_20px_rgba(205,127,50,0.4)]" style={{ backgroundColor: sortedPlayers[2].color }}>
+                      <div className="text-xl mb-1">🥉</div>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg mb-1 shadow-[0_0_15px_rgba(205,127,50,0.4)] border-2 border-amber-600" style={{ backgroundColor: sortedPlayers[2].color }}>
                         {sortedPlayers[2].avatar.emoji}
                       </div>
-                      <p className="text-white font-bold text-xs truncate w-full text-center">{sortedPlayers[2].nickname}</p>
-                      <div className="w-full h-16 bg-gradient-to-t from-orange-800/80 to-amber-700/50 mt-2 rounded-t-xl border-t-4 border-amber-600 flex items-end justify-center pb-1 text-white font-black text-xl drop-shadow-md">
+                      <p className="text-white font-bold text-[8px] md:text-[10px] truncate w-full text-center px-1">{sortedPlayers[2].nickname}</p>
+                      <div className="w-full h-12 bg-gradient-to-t from-orange-800/80 to-amber-700/50 mt-1 rounded-t-xl border-t-4 border-amber-600 flex items-center justify-center text-white font-black text-xl drop-shadow-md">
                         3
                       </div>
                     </motion.div>
@@ -1613,7 +1613,7 @@ export default function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1.5 }}
-                    className="w-full max-w-sm max-h-32 mb-6 overflow-y-auto scrollbar-thin space-y-2 pr-2"
+                    className="w-full max-w-sm max-h-24 mb-4 overflow-y-auto scrollbar-thin space-y-2 pr-2 shrink-0"
                   >
                     {sortedPlayers.slice(3).map((p, i) => (
                       <div key={p.id} className="flex flex-row items-center justify-between bg-black/40 border-2 border-[#4a2c2a] rounded-xl p-3">
@@ -1635,12 +1635,12 @@ export default function App() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 2.0 }}
-                  className="flex flex-col items-center gap-3 w-full max-w-sm mt-auto"
+                  className="flex flex-col items-center gap-2 w-full max-w-sm mt-auto shrink-0"
                 >
                   {room?.gameMasterId === playerId && (
                     <button 
                       onClick={handleRestart}
-                      className="w-full bg-[#ff4500] text-white font-black py-4 rounded-xl hover:bg-[#ff6347] transition-all shadow-xl shadow-[#ff4500]/30 uppercase tracking-widest"
+                      className="w-full bg-[#ff4500] text-white font-black py-3 rounded-xl hover:bg-[#ff6347] transition-all shadow-xl shadow-[#ff4500]/30 uppercase tracking-widest text-sm"
                     >
                       {t.newExpedition}
                     </button>
