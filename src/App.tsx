@@ -99,6 +99,7 @@ interface Room {
   gameMasterId: string;
   round: number;
   warningTime: number;
+  createdAt?: any;
   countdownStart?: any;
 }
 
@@ -162,6 +163,12 @@ const WASDPanel = ({ pressedKeys }: { pressedKeys: Set<string> }) => {
       </div>
     </div>
   );
+};
+
+const formatMMSS = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 };
 
 // --- Sound Manager (Web Audio API) ---
@@ -322,6 +329,11 @@ export default function App() {
   const [hallOfFame, setHallOfFame] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+
+  // Timer state (shared across all clients via room.createdAt)
+  const [gameStartTimeMs, setGameStartTimeMs] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [finalDurationSeconds, setFinalDurationSeconds] = useState<number | null>(null);
   const [inputCode, setInputCode] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
@@ -695,6 +707,42 @@ export default function App() {
       setCountdown(null);
     }
   }, [room?.status, room?.countdownStart, room?.gameMasterId, playerId, roomCode]);
+
+  // --- Timer (synchronized with room.createdAt) ---
+  useEffect(() => {
+    if (!room?.createdAt) {
+      setGameStartTimeMs(null);
+      setElapsedSeconds(0);
+      setFinalDurationSeconds(null);
+      return;
+    }
+
+    const startMs = room.createdAt?.toMillis ? room.createdAt.toMillis() : room.createdAt;
+    setGameStartTimeMs(startMs);
+  }, [room?.createdAt]);
+
+  useEffect(() => {
+    if (!gameStartTimeMs) return;
+
+    if (room?.status === 'playing') {
+      setFinalDurationSeconds(null);
+      const interval = setInterval(() => {
+        const elapsed = Math.max(0, Math.floor((Date.now() - gameStartTimeMs) / 1000));
+        setElapsedSeconds(elapsed);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+
+    if (room?.status === 'finished') {
+      const elapsed = Math.max(0, Math.floor((Date.now() - gameStartTimeMs) / 1000));
+      setElapsedSeconds(elapsed);
+      setFinalDurationSeconds(elapsed);
+      return;
+    }
+
+    // pause / lobby / countdown
+    setElapsedSeconds(0);
+  }, [room?.status, gameStartTimeMs]);
 
   // --- Firestore Listeners ---
   useEffect(() => {
@@ -1411,6 +1459,14 @@ export default function App() {
 
         {/* Center: Game Board */}
         <div className="flex-1 flex flex-col items-center justify-center gap-4 relative">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/70 border border-[#ff6b00] rounded-xl px-3 py-1 shadow-[0_0_20px_rgba(255,107,0,0.4)]">
+            <span className="text-[#ff6b00] font-mono font-black text-lg tracking-widest">
+              {room?.status === 'finished'
+                ? `Duración: ${formatMMSS(finalDurationSeconds ?? elapsedSeconds)}`
+                : formatMMSS(elapsedSeconds)}
+            </span>
+          </div>
+
           <AnimatePresence>
             {countdown !== null && (
               <motion.div
@@ -1546,7 +1602,7 @@ export default function App() {
               <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-start text-[#ff4500] z-20 rounded-3xl p-6 overflow-y-auto scrollbar-thin">
                 <Trophy className="w-12 h-12 mb-2 text-yellow-500 animate-pulse drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0" />
                 <h2 className="text-2xl md:text-3xl font-black tracking-tighter italic text-white uppercase mb-2 mt-2 shrink-0">{t.expeditionEnd}</h2>
-                
+                <p className="text-[#ff6b00] font-mono font-black text-sm uppercase tracking-widest mb-3">Duración: {formatMMSS(finalDurationSeconds ?? elapsedSeconds)}</p>
                 {/* Podium View */}
                 <div className="flex items-end justify-center gap-2 md:gap-4 mb-4 w-full max-w-lg shrink-0">
                   {/* 2nd Place */}
