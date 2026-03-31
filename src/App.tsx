@@ -81,6 +81,7 @@ interface Player {
   avatar: { emoji: string; name: string };
   color: string;
   roundsSurvived?: number;
+  eliminatedAt?: any;
 }
 
 interface GameEngineStatus {
@@ -620,7 +621,8 @@ export default function App() {
         const rounds = engine.round > 0 ? engine.round - 1 : 0;
         updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
           status: 'eliminated',
-          roundsSurvived: rounds
+          roundsSurvived: rounds,
+          eliminatedAt: serverTimestamp()
         });
         sounds.playElimination();
         
@@ -1324,7 +1326,12 @@ export default function App() {
       if (a.status === 'active' && b.status !== 'active') return -1;
       if (a.status !== 'active' && b.status === 'active') return 1;
       if (a.status !== 'active' && b.status !== 'active') {
-        return (b.roundsSurvived || 0) - (a.roundsSurvived || 0);
+        const roundsDiff = (b.roundsSurvived || 0) - (a.roundsSurvived || 0);
+        if (roundsDiff !== 0) return roundsDiff;
+        // Tie-breaker: whoever died later (larger timestamp) is ranked higher
+        const aTime = a.eliminatedAt?.toMillis() || 0;
+        const bTime = b.eliminatedAt?.toMillis() || 0;
+        return bTime - aTime;
       }
       return 0;
     });
@@ -1536,29 +1543,115 @@ export default function App() {
             )}
 
             {room?.status === 'finished' && (
-              <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-[#ff4500] z-20 rounded-3xl">
-                <Trophy className="w-24 h-24 mb-4 text-yellow-500 animate-pulse drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
-                <h2 className="text-5xl font-black tracking-tighter italic text-white uppercase">{t.expeditionEnd}</h2>
-                <div className="my-8 text-center">
-                  <p className="text-xs font-bold text-[#ff8c00] uppercase tracking-widest mb-2">{t.soleSurvivor}:</p>
-                  <p className="text-4xl font-black text-white underline decoration-[#ff4500] underline-offset-8">
-                    {players.find(p => p.status === 'active')?.nickname || t.noOne}
-                  </p>
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-[#ff4500] z-20 rounded-3xl p-6 overflow-hidden">
+                <Trophy className="w-16 h-16 mb-2 text-yellow-500 animate-pulse drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
+                <h2 className="text-4xl font-black tracking-tighter italic text-white uppercase mb-6">{t.expeditionEnd}</h2>
+                
+                {/* Podium View */}
+                <div className="flex items-end justify-center gap-4 h-48 mb-8 w-full max-w-lg">
+                  {/* 2nd Place */}
+                  {sortedPlayers[1] && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0, y: 50 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: 0.6, type: "spring", bounce: 0.5 }}
+                      className="flex flex-col items-center w-1/3"
+                    >
+                      <div className="text-4xl mb-2">🥈</div>
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]" style={{ backgroundColor: sortedPlayers[1].color }}>
+                        {sortedPlayers[1].avatar.emoji}
+                      </div>
+                      <p className="text-white font-bold text-sm truncate w-full text-center">{sortedPlayers[1].nickname}</p>
+                      <div className="w-full h-24 bg-gradient-to-t from-gray-400/80 to-gray-300/50 mt-2 rounded-t-xl border-t-4 border-gray-300 flex items-end justify-center pb-2 text-white font-black text-2xl drop-shadow-md">
+                        2
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* 1st Place */}
+                  {sortedPlayers[0] && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0, y: 50 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: 1.0, type: "spring", bounce: 0.5 }}
+                      className="flex flex-col items-center w-1/3 z-10"
+                    >
+                      <div className="text-5xl mb-2 animate-bounce">🥇</div>
+                      <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-2 shadow-[0_0_30px_rgba(255,215,0,0.5)]" style={{ backgroundColor: sortedPlayers[0].color }}>
+                        {sortedPlayers[0].avatar.emoji}
+                      </div>
+                      <p className="text-white font-black text-lg truncate w-full text-center">{sortedPlayers[0].nickname}</p>
+                      <div className="w-full h-32 bg-gradient-to-t from-yellow-600/80 to-yellow-400/50 mt-2 rounded-t-xl border-t-4 border-yellow-400 flex items-end justify-center pb-4 text-white font-black text-4xl drop-shadow-md">
+                        1
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* 3rd Place */}
+                  {sortedPlayers[2] && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0, y: 50 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
+                      className="flex flex-col items-center w-1/3"
+                    >
+                      <div className="text-4xl mb-2">🥉</div>
+                      <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-2 shadow-[0_0_20px_rgba(205,127,50,0.4)]" style={{ backgroundColor: sortedPlayers[2].color }}>
+                        {sortedPlayers[2].avatar.emoji}
+                      </div>
+                      <p className="text-white font-bold text-xs truncate w-full text-center">{sortedPlayers[2].nickname}</p>
+                      <div className="w-full h-16 bg-gradient-to-t from-orange-800/80 to-amber-700/50 mt-2 rounded-t-xl border-t-4 border-amber-600 flex items-end justify-center pb-1 text-white font-black text-xl drop-shadow-md">
+                        3
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-                {room?.gameMasterId === playerId && (
-                  <button 
-                    onClick={handleRestart}
-                    className="bg-[#ff4500] text-white font-black px-12 py-4 rounded-2xl hover:bg-[#ff6347] transition-all shadow-2xl shadow-[#ff4500]/30 uppercase tracking-widest mb-4"
+
+                {/* Other Players List */}
+                {sortedPlayers.length > 3 && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.5 }}
+                    className="w-full max-w-sm max-h-32 mb-6 overflow-y-auto scrollbar-thin space-y-2 pr-2"
                   >
-                    {t.newExpedition}
-                  </button>
+                    {sortedPlayers.slice(3).map((p, i) => (
+                      <div key={p.id} className="flex flex-row items-center justify-between bg-black/40 border-2 border-[#4a2c2a] rounded-xl p-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-[#a08070] font-black text-xs">#{i + 4}</span>
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: p.color }}>
+                            {p.avatar.emoji}
+                          </div>
+                          <span className="text-white font-bold text-sm">{p.nickname}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-[#ff4500] uppercase">{p.roundsSurvived || 0} {t.round}</span>
+                      </div>
+                    ))}
+                  </motion.div>
                 )}
-                <button 
-                  onClick={() => setRoomCode(null)}
-                  className="text-[#a08070] font-black uppercase tracking-widest text-xs hover:text-white transition-colors"
+
+                {/* Controls */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 2.0 }}
+                  className="flex flex-col items-center gap-3 w-full max-w-sm mt-auto"
                 >
-                  {t.returnToMenu}
-                </button>
+                  {room?.gameMasterId === playerId && (
+                    <button 
+                      onClick={handleRestart}
+                      className="w-full bg-[#ff4500] text-white font-black py-4 rounded-xl hover:bg-[#ff6347] transition-all shadow-xl shadow-[#ff4500]/30 uppercase tracking-widest"
+                    >
+                      {t.newExpedition}
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setRoomCode(null)}
+                    className="text-[#a08070] font-black uppercase tracking-widest text-xs hover:text-white transition-colors p-2"
+                  >
+                    {t.returnToMenu}
+                  </button>
+                </motion.div>
               </div>
             )}
           </div>
