@@ -56,3 +56,34 @@
   pointer-events: none;
   animation: bubble 1.5s infinite ease-out;
 }
+
+@keyframes revive-burst {
+  0% {
+    box-shadow: 
+      0 0 0 0 currentColor,
+      0 0 0 0 rgba(0, 255, 65, 0.7);
+  }
+  50% {
+    box-shadow:
+      0 0 0 15px transparent,
+      0 0 0 25px rgba(0, 255, 65, 0.3);
+  }
+  100% {
+    box-shadow:
+      0 0 0 30px transparent,
+      0 0 0 50px transparent;
+  }
+}
+
+@keyframes revive-glow {
+  0%, 100% { 
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+  50% { 
+    filter: brightness(1.5) drop-shadow(0 0 20px currentColor);
+  }
+}
+
+.revive-animation {
+  animation: revive-burst 0.8s ease-out, revive-glow 0.8s ease-in-out;
+}

@@ -1533,11 +1533,15 @@ export default function App() {
                         <motion.div
                           key={p.id}
                           layoutId={p.id}
-                          initial={{ scale: 0, rotate: -45 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          exit={{ scale: 0 }}
-                          className="absolute inset-1.5 rounded-full border-2 border-black/30 flex items-center justify-center shadow-lg text-xl"
-                          style={{ backgroundColor: p.color }}
+                          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", bounce: 0.6, duration: 0.6 }}
+                          className="absolute inset-1.5 rounded-full border-2 border-black/30 flex items-center justify-center shadow-lg text-xl transition-all"
+                          style={{ 
+                            backgroundColor: p.color,
+                            boxShadow: `0 0 20px ${p.color}80, inset 0 0 10px rgba(255,255,255,0.3)`
+                          }}
                         >
                           {p.avatar.emoji}
                         </motion.div>
