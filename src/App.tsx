@@ -340,6 +340,9 @@ export default function App() {
   const [bannerText, setBannerText] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [showEliminationModal, setShowEliminationModal] = useState(false);
+  const [canExitAfterDelay, setCanExitAfterDelay] = useState(false);
+  const [survivedSecondsAtElimination, setSurvivedSecondsAtElimination] = useState<number | null>(null);
 
   // --- Settings State ---
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('language') as Language) || 'es');
@@ -610,6 +613,37 @@ export default function App() {
     }
   }, [players, room?.status, playerId]);
 
+  const [eliminationActivated, setEliminationActivated] = useState(false);
+
+  useEffect(() => {
+    const currentPlayer = players.find(p => p.id === playerId);
+    const isEliminated = currentPlayer?.status === 'eliminated';
+
+    if (isEliminated && room?.status === 'playing') {
+      setShowEliminationModal(true);
+    } else {
+      setShowEliminationModal(false);
+    }
+  }, [players, room?.status, playerId]);
+
+  useEffect(() => {
+    const currentPlayer = players.find(p => p.id === playerId);
+    const isEliminated = currentPlayer?.status === 'eliminated';
+
+    if (isEliminated && room?.status === 'playing' && !eliminationActivated) {
+      setEliminationActivated(true);
+      setSurvivedSecondsAtElimination(elapsedSeconds);
+      setCanExitAfterDelay(true); // immediate true
+      return;
+    }
+
+    if (!isEliminated || room?.status !== 'playing') {
+      setEliminationActivated(false);
+      setCanExitAfterDelay(false);
+      setSurvivedSecondsAtElimination(null);
+    }
+  }, [players, room?.status, playerId, eliminationActivated, elapsedSeconds]);
+
   useEffect(() => {
     if (engine?.phase === 'warning') {
       sounds.playWarning();
@@ -849,6 +883,22 @@ export default function App() {
     }
   };
 
+  const handleMove = async (x: number, y: number) => {
+    if (!room || room.status !== 'playing' || !playerId || !roomCode || showPreview) return;
+    const currentPlayer = players.find(p => p.id === playerId);
+    if (!currentPlayer || currentPlayer.status !== 'active') return;
+
+    if (!isAdjacent(currentPlayer.position, { x, y })) return;
+    if (engine?.lava_zones.includes(getCellId(x, y))) return;
+
+    const isOccupied = players.some(p => p.status === 'active' && p.position.x === x && p.position.y === y);
+    if (isOccupied) return;
+
+    await updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
+      position: { x, y }
+    });
+  };
+
   const handleJoinRoom = async () => {
     if (!profile || !playerId || !inputCode.trim()) {
       setError('Expedition Code required');
@@ -915,20 +965,18 @@ export default function App() {
     });
   };
 
-  const handleMove = async (x: number, y: number) => {
-    if (!room || room.status !== 'playing' || !playerId || !roomCode || showPreview) return;
-    const currentPlayer = players.find(p => p.id === playerId);
-    if (!currentPlayer || currentPlayer.status !== 'active') return;
+  const handleSelectAvatar = async (avatarIndex: number) => {
+    if (!roomCode || !playerId) return;
+    const selectedAvatar = AVATARS[avatarIndex];
+    const selectedColor = NEON_COLORS[avatarIndex];
 
-    if (!isAdjacent(currentPlayer.position, { x, y })) return;
-    if (engine?.lava_zones.includes(getCellId(x, y))) return;
-
-    // Collision Check: Silent cancel if occupied
-    const isOccupied = players.some(p => p.status === 'active' && p.position.x === x && p.position.y === y);
-    if (isOccupied) return;
+    // Check if avatar is already taken by another player
+    const isTaken = players.some(p => p.id !== playerId && p.avatar.emoji === selectedAvatar.emoji);
+    if (isTaken) return;
 
     await updateDoc(doc(db, `rooms/${roomCode}/players/${playerId}`), {
-      position: { x, y }
+      avatar: selectedAvatar,
+      color: selectedColor
     });
   };
 
@@ -1364,6 +1412,40 @@ export default function App() {
           </div>
 
           <div className="space-y-4 flex flex-col justify-center">
+            <div className="space-y-4">
+              <h3 className="text-xs uppercase tracking-widest font-black text-[#ff8c00] flex items-center gap-2">
+                <Flame className="w-4 h-4" /> {t.selectAvatar || 'Seleccionar Avatar'}
+              </h3>
+              <div className="grid grid-cols-4 gap-2">
+                {AVATARS.slice(0, 8).map((avatar, index) => {
+                  const isTaken = players.some(p => p.avatar.emoji === avatar.emoji);
+                  const takenBy = players.find(p => p.avatar.emoji === avatar.emoji);
+                  const isSelected = players.find(p => p.id === playerId)?.avatar.emoji === avatar.emoji;
+                  return (
+                    <div
+                      key={avatar.emoji}
+                      onClick={() => !isTaken && handleSelectAvatar(index)}
+                      className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                        isTaken
+                          ? 'bg-gray-600 border-gray-500 opacity-50 cursor-not-allowed'
+                          : isSelected
+                          ? 'bg-[#ff4500] border-[#ff4500] shadow-[0_0_15px_rgba(255,69,0,0.5)]'
+                          : 'bg-[#2c1e1a] border-[#4a2c2a] hover:bg-[#ff4500]/20 hover:border-[#ff4500]'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl mb-1">{avatar.emoji}</div>
+                        <div className="text-[10px] font-black text-white uppercase tracking-widest h-5 line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap">{avatar.name}</div>
+                        {isTaken && takenBy && (
+                          <div className="text-[7px] text-gray-300 mt-1 truncate max-w-full">{takenBy.nickname}</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {room?.gameMasterId === playerId ? (
               <button 
                 onClick={handleStartGame}
@@ -1611,18 +1693,27 @@ export default function App() {
               </div>
             )}
 
-            {isEliminated && room?.status === 'playing' && !showPreview && (
-              <div className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-red-500 z-40 rounded-3xl p-8">
-                <Skull className="w-24 h-24 mb-4 animate-bounce" />
-                <h2 className="text-5xl font-black tracking-tighter italic uppercase">{t.burned}</h2>
-                <p className="text-sm font-bold uppercase tracking-widest opacity-70">{t.fellIntoLava}</p>
-                <p className="mt-8 text-[10px] font-black animate-pulse uppercase tracking-[0.5em]">{t.spectating}</p>
-                <button 
-                  onClick={() => setRoomCode(null)}
-                  className="mt-8 bg-red-600 hover:bg-red-700 text-white font-black py-3 px-6 rounded-xl uppercase tracking-widest transition-all"
+            {showEliminationModal && currentPlayer && !showPreview && (
+              <div className="absolute inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-40 p-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full max-w-md bg-[#1a0f0a] border border-[#ff4500] rounded-3xl shadow-[0_0_30px_rgba(255,107,0,0.8)] p-8"
                 >
-                  {t.returnToMenu || 'Volver al menú'}
-                </button>
+                  <div className="flex flex-col items-center text-center gap-3 text-white">
+                    <h2 className="text-5xl font-black text-[#ff2500]">¡Moriste!</h2>
+                    <p className="text-lg font-bold text-[#ff6b00]">Has sido eliminado</p>
+                    <p className="text-xs text-[#ffa600]">{canExitAfterDelay ? 'Pulsa para volver al menú' : 'Espera 4 segundos...'}</p>
+                    <button
+                      onClick={() => canExitAfterDelay && setRoomCode(null)}
+                      disabled={!canExitAfterDelay}
+                      className="w-full py-3 rounded-xl font-black uppercase text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-[#ff4500] to-[#ff0000] hover:from-[#ff7b00] hover:to-[#ff4500]"
+                    >
+                      VOLVER AL MENÚ PRINCIPAL
+                    </button>
+                  </div>
+                </motion.div>
               </div>
             )}
 
@@ -1785,7 +1876,7 @@ export default function App() {
     <div className="min-h-screen bg-[#1a0f0a] selection:bg-[#ff4500] selection:text-white overflow-x-hidden">
       {!roomCode ? renderStart() : room?.status === 'lobby' ? renderLobby() : renderGame()}
       <footer className="text-center text-xs py-2" style={{color: '#ff6b00'}}>
-      🌋 Volcano Escape — v1.3.0
+      🌋 Volcano Escape — v1.4.5
       </footer>
     </div>
   );
