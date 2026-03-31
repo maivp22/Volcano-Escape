@@ -1690,23 +1690,16 @@ export default function App() {
                   className="w-full max-w-md bg-[#1a0f0a] border border-[#ff4500] rounded-3xl shadow-[0_0_30px_rgba(255,107,0,0.8)] p-8"
                 >
                   <div className="flex flex-col items-center text-center gap-3 text-white">
-                    <div className="text-7xl">{currentPlayer.avatar.emoji}</div>
-                    <div className="text-xs uppercase tracking-widest font-black text-[#ff4500]">{currentPlayer.avatar.name}</div>
-                    <h2 className="text-4xl font-black text-[#ff2500]">¡La lava te consumió!</h2>
-                    <p className="text-xl font-black text-[#ff6b00]">{currentPlayer.nickname}</p>
-                    <p className="text-sm text-[#f5a623]">Tiempo sobrevivido: {formatMMSS(survivedSecondsAtElimination ?? elapsedSeconds)}</p>
-                    <p className="text-sm text-[#f5a623]">Rondas sobrevividas: {currentPlayer.roundsSurvived ?? Math.max(0, (room?.round || 1) - 1)}</p>
-                    <div className="h-[1px] w-full bg-[#ff4500] my-3" />
+                    <h2 className="text-5xl font-black text-[#ff2500]">¡Moriste!</h2>
+                    <p className="text-lg font-bold text-[#ff6b00]">Has sido eliminado</p>
+                    <p className="text-xs text-[#ffa600]">{canExitAfterDelay ? 'Pulsa para volver al menú' : 'Espera 4 segundos...'}</p>
                     <button
-                      onClick={() => setRoomCode(null)}
+                      onClick={() => canExitAfterDelay && setRoomCode(null)}
                       disabled={!canExitAfterDelay}
                       className="w-full py-3 rounded-xl font-black uppercase text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-[#ff4500] to-[#ff0000] hover:from-[#ff7b00] hover:to-[#ff4500]"
                     >
-                      {canExitAfterDelay ? 'VOLVER AL MENÚ PRINCIPAL' : 'ESPERANDO...'}
+                      VOLVER AL MENÚ PRINCIPAL
                     </button>
-                    {!canExitAfterDelay && (
-                      <p className="text-xs text-[#ffa600]">Botón habilitado en 4s</p>
-                    )}
                   </div>
                 </motion.div>
               </div>
