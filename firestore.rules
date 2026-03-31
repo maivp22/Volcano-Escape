@@ -56,6 +56,10 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isAuthenticated();
       }
+
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
     }
   }
 }
